@@ -6,7 +6,7 @@ body {
 }
 
 .container {
-    max-width: 800px;
+    max-width: 900px;
     margin: 20px auto;
     padding: 20px;
     background-color: #fff;
@@ -17,6 +17,11 @@ body {
 h1 {
     text-align: center;
     color: #333;
+}
+
+p {
+    text-align: center;
+    color: #555;
 }
 
 .form-group {
@@ -67,16 +72,24 @@ button:hover {
     margin-top: 10px;
 }
 
+.success {
+    color: green;
+    text-align: center;
+    margin-top: 10px;
+}
+
 .image-container {
     display: flex;
     justify-content: space-between;
     margin-top: 20px;
+    flex-wrap: wrap;
 }
 
 .image-box {
     flex: 1;
-    margin: 0 10px;
+    margin: 10px;
     text-align: center;
+    min-width: 200px;
 }
 
 .image-box h3 {
@@ -88,4 +101,28 @@ button:hover {
     height: auto;
     border: 1px solid #ccc;
     border-radius: 4px;
+    transition: transform 0.3s ease;
+}
+
+.image-box img:hover {
+    transform: scale(1.05);
+}
+
+.button {
+    display: inline-block;
+    padding: 10px;
+    background-color: #28a745;
+    color: #fff;
+    text-decoration: none;
+    border-radius: 4px;
+    margin-top: 20px;
+    text-align: center;
+    width: 200px;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.button:hover {
+    background-color: #218838;
 }
