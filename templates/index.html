@@ -9,11 +9,17 @@
 <body>
     <div class="container">
         <h1>breakage: Image Enhancement Toolkit</h1>
-        <p><strong>Note:</strong> Uploaded images are processed in grayscale.</p>
         <form method="post" enctype="multipart/form-data">
             <div class="form-group">
                 <label for="file">Upload Image:</label>
                 <input type="file" id="file" name="file" accept="image/*" required>
+            </div>
+            <div class="form-group">
+                <label for="color_mode">Color Mode:</label>
+                <select id="color_mode" name="color_mode">
+                    <option value="grayscale">Grayscale</option>
+                    <option value="rgb">RGB</option>
+                </select>
             </div>
             <div class="form-group">
                 <label for="enhancement">Select Enhancement:</label>
