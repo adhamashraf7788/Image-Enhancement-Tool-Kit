@@ -1,83 +1,126 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Image Enhancement Toolkit</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v={{ 'now'|datetime|timestamp }}">
-</head>
-<body>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>breakage: Image Enhancement Toolkit</title>
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='style.css') }}?v={{ 'now'|datetime|timestamp }}"
+    />
+  </head>
+  <body>
     <div class="container">
-        <h1>breakage: Image Enhancement Toolkit</h1>
-        <form method="post" enctype="multipart/form-data">
-            <div class="form-group">
-                <label for="file">Upload Image:</label>
-                <input type="file" id="file" name="file" accept="image/*" required>
-            </div>
-            <div class="form-group">
-                <label for="color_mode">Color Mode:</label>
-                <select id="color_mode" name="color_mode">
-                    <option value="grayscale">Grayscale</option>
-                    <option value="rgb">RGB</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label for="enhancement">Select Enhancement:</label>
-                <select id="enhancement" name="enhancement" onchange="toggleParams()">
-                    <option value="gamma">Power-Law (Gamma) Transformation</option>
-                    <option value="gray_slicing">Gray-Level Slicing</option>
-                    <option value="histogram">Histogram Equalization</option>
-                    <option value="contrast_stretching">Contrast Stretching</option>
-                </select>
-            </div>
-            <div id="gamma-params" class="form-group params">
-                <label for="gamma">Gamma Value:</label>
-                <input type="number" id="gamma" name="gamma" step="0.1" value="{{ defaults.gamma }}" min="0.1" max="5.0">
-            </div>
-            <div id="gray-slicing-params" class="form-group params" style="display: none;">
-                <label for="min_gray">Min Gray Level:</label>
-                <input type="number" id="min_gray" name="min_gray" value="{{ defaults.min_gray }}" min="0" max="255">
-                <label for="max_gray">Max Gray Level:</label>
-                <input type="number" id="max_gray" name="max_gray" value="{{ defaults.max_gray }}" min="0" max="255">
-            </div>
-            <button type="submit">Process Image</button>
-        </form>
-        {% if error %}
-            <p class="error">{{ error }}</p>
-        {% endif %}
-        {% if original_img and processed_img and not error %}
-            <p class="success">Image processed successfully!</p>
-        {% endif %}
-        {% if original_img and processed_img %}
-            <div class="image-container">
-                <div class="image-box">
-                    <h3>Original Image</h3>
-                    <img src="data:image/png;base64,{{ original_img }}" alt="Original Image">
-                </div>
-                <div class="image-box">
-                    <h3>Processed Image</h3>
-                    <img src="data:image/png;base64,{{ processed_img }}" alt="Processed Image">
-                </div>
-            </div>
-            <div class="image-container">
-                <div class="image-box">
-                    <h3>Original Histogram</h3>
-                    <img src="data:image/png;base64,{{ original_hist }}" alt="Original Histogram">
-                </div>
-                <div class="image-box">
-                    <h3>Processed Histogram</h3>
-                    <img src="data:image/png;base64,{{ processed_hist }}" alt="Processed Histogram">
-                </div>
-            </div>
-            <a href="{{ url_for('download') }}" class="button">Download Processed Image</a>
-        {% endif %}
+      <h1>Image Enhancement Toolkit</h1>
+      <form method="post" enctype="multipart/form-data">
+        <div class="form-group">
+          <label for="file">Upload Image:</label>
+          <input type="file" id="file" name="file" accept="image/*" required />
+        </div>
+        <div class="form-group">
+          <label for="color_mode">Color Mode:</label>
+          <select id="color_mode" name="color_mode">
+            <option value="grayscale">Grayscale</option>
+            <option value="rgb">RGB</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="enhancement">Select Enhancement:</label>
+          <select id="enhancement" name="enhancement" onchange="toggleParams()">
+            <option value="gamma">Power-Law (Gamma) Transformation</option>
+            <option value="gray_slicing">Gray-Level Slicing</option>
+            <option value="histogram">Histogram Equalization</option>
+            <option value="contrast_stretching">Contrast Stretching</option>
+          </select>
+        </div>
+        <div id="gamma-params" class="form-group params">
+          <label for="gamma">Gamma Value:</label>
+          <input
+            type="number"
+            id="gamma"
+            name="gamma"
+            step="0.1"
+            value="{{ defaults.gamma }}"
+            min="0.1"
+            max="5.0"
+          />
+        </div>
+        <div
+          id="gray-slicing-params"
+          class="form-group params"
+          style="display: none"
+        >
+          <label for="min_gray">Min Gray Level:</label>
+          <input
+            type="number"
+            id="min_gray"
+            name="min_gray"
+            value="{{ defaults.min_gray }}"
+            min="0"
+            max="255"
+          />
+          <label for="max_gray">Max Gray Level:</label>
+          <input
+            type="number"
+            id="max_gray"
+            name="max_gray"
+            value="{{ defaults.max_gray }}"
+            min="0"
+            max="255"
+          />
+        </div>
+        <button type="submit">Process Image</button>
+      </form>
+      {% if error %}
+      <p class="error">{{ error }}</p>
+      {% endif %} {% if original_img and processed_img and not error %}
+      <p class="success">Image processed successfully!</p>
+      {% endif %} {% if original_img and processed_img %}
+      <div class="image-container">
+        <div class="image-box">
+          <h3>Original Image</h3>
+          <img
+            src="data:image/png;base64,{{ original_img }}"
+            alt="Original Image"
+          />
+        </div>
+        <div class="image-box">
+          <h3>Processed Image</h3>
+          <img
+            src="data:image/png;base64,{{ processed_img }}"
+            alt="Processed Image"
+          />
+        </div>
+      </div>
+      <div class="image-container">
+        <div class="image-box">
+          <h3>Original Histogram</h3>
+          <img
+            src="data:image/png;base64,{{ original_hist }}"
+            alt="Original Histogram"
+          />
+        </div>
+        <div class="image-box">
+          <h3>Processed Histogram</h3>
+          <img
+            src="data:image/png;base64,{{ processed_hist }}"
+            alt="Processed Histogram"
+          />
+        </div>
+      </div>
+      <a href="{{ url_for('download') }}" class="button"
+        >Download Processed Image</a
+      >
+      {% endif %}
     </div>
     <script>
-        function toggleParams() {
-            const enhancement = document.getElementById('enhancement').value;
-            document.getElementById('gamma-params').style.display = enhancement === 'gamma' ? 'block' : 'none';
-            document.getElementById('gray-slicing-params').style.display = enhancement === 'gray_slicing' ? 'block' : 'none';
-        }
+      function toggleParams() {
+        const enhancement = document.getElementById("enhancement").value;
+        document.getElementById("gamma-params").style.display =
+          enhancement === "gamma" ? "block" : "none";
+        document.getElementById("gray-slicing-params").style.display =
+          enhancement === "gray_slicing" ? "block" : "none";
+      }
     </script>
-</body>
+  </body>
 </html>
