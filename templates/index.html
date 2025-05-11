@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Image Enhancement Toolkit</title>
+    <title>breakage: Image Enhancement Toolkit</title>
     <link
       rel="stylesheet"
       href="{{ url_for('static', filename='style.css') }}?v={{ 'now'|datetime|timestamp }}"
@@ -30,7 +30,10 @@
             <option value="gamma">Power-Law (Gamma) Transformation</option>
             <option value="gray_slicing">Gray-Level Slicing</option>
             <option value="histogram">Histogram Equalization</option>
-            <option value="contrast_stretching">Contrast Stretching</option>
+            <option value="bit_slicing">Bit-Plane Slicing</option>
+            <option value="piecewise_linear">
+              Piecewise Linear Transformation
+            </option>
           </select>
         </div>
         <div id="gamma-params" class="form-group params">
@@ -65,6 +68,63 @@
             id="max_gray"
             name="max_gray"
             value="{{ defaults.max_gray }}"
+            min="0"
+            max="255"
+          />
+        </div>
+        <div
+          id="bit-slicing-params"
+          class="form-group params"
+          style="display: none"
+        >
+          <label for="bit_plane">Bit Plane (0-7):</label>
+          <input
+            type="number"
+            id="bit_plane"
+            name="bit_plane"
+            value="{{ defaults.bit_plane }}"
+            min="0"
+            max="7"
+          />
+        </div>
+        <div
+          id="piecewise-linear-params"
+          class="form-group params"
+          style="display: none"
+        >
+          <label for="r1">Input Point 1 (r1):</label>
+          <input
+            type="number"
+            id="r1"
+            name="r1"
+            value="{{ defaults.r1 }}"
+            min="0"
+            max="255"
+          />
+          <label for="s1">Output Point 1 (s1):</label>
+          <input
+            type="number"
+            id="s1"
+            name="s1"
+            value="{{ defaults.s1 }}"
+            min="0"
+            max="255"
+          />
+          <label for="r2">Input Point 2 (r2):</label>
+          <input
+            type="number"
+            id="r2"
+            name="r2"
+            value="{{ defaults.r2 }}"
+            min="0"
+            max="255"
+          />
+          <label for="s2">Output Point 2 (s2):</label>
+          <input
+            type="number"
+            id="s2"
+            name="s2"
+            value="{{ defaults.s2 }}"
             min="0"
             max="255"
           />
@@ -120,6 +180,10 @@
           enhancement === "gamma" ? "block" : "none";
         document.getElementById("gray-slicing-params").style.display =
           enhancement === "gray_slicing" ? "block" : "none";
+        document.getElementById("bit-slicing-params").style.display =
+          enhancement === "bit_slicing" ? "block" : "none";
+        document.getElementById("piecewise-linear-params").style.display =
+          enhancement === "piecewise_linear" ? "block" : "none";
       }
     </script>
   </body>

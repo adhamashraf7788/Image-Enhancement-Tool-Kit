@@ -1,5 +1,5 @@
 # breakage: Image Enhancement Web Application for CSE281
-# Implements Power-Law Transformation, Gray-Level Slicing, Histogram Equalization, and Contrast Stretching
+# Implements Power-Law Transformation, Gray-Level Slicing, Histogram Equalization, Bit-Plane Slicing, and Piecewise Linear Transformation
 # Supports both grayscale and RGB image processing
 
 from flask import Flask, request, render_template, send_file
@@ -25,7 +25,12 @@ os.makedirs(OUTPUT_FOLDER, exist_ok=True)
 DEFAULTS = {
     'gamma': 0.5,
     'min_gray': 100,
-    'max_gray': 200
+    'max_gray': 200,
+    'bit_plane': 7,
+    'r1': 50,
+    's1': 20,
+    'r2': 150,
+    's2': 200
 }
 
 def power_law_transform(image, gamma, is_rgb=False):
@@ -41,7 +46,6 @@ def power_law_transform(image, gamma, is_rgb=False):
         np.ndarray: Transformed image.
     """
     if is_rgb:
-        # Split into R, G, B channels
         channels = cv2.split(image)
         transformed_channels = []
         for channel in channels:
@@ -68,7 +72,6 @@ def gray_level_slicing(image, min_val, max_val, is_rgb=False):
         np.ndarray: Sliced image.
     """
     if is_rgb:
-        # Convert to HSV and slice the V channel
         hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
         h, s, v = cv2.split(hsv)
         output_v = np.zeros_like(v)
@@ -78,36 +81,6 @@ def gray_level_slicing(image, min_val, max_val, is_rgb=False):
         output_image = np.zeros_like(image)
         output_image[(image >= min_val) & (image <= max_val)] = 255
         return output_image
-
-def contrast_stretching(image, is_rgb=False):
-    """
-    Apply Contrast Stretching to enhance image contrast.
-    
-    Args:
-        image (np.ndarray): Grayscale or RGB image array.
-        is_rgb (bool): If True, process each RGB channel separately.
-    
-    Returns:
-        np.ndarray: Stretched image.
-    """
-    if is_rgb:
-        channels = cv2.split(image)
-        stretched_channels = []
-        for channel in channels:
-            min_val = np.min(channel)
-            max_val = np.max(channel)
-            if max_val == min_val:
-                stretched_channels.append(channel.copy())
-            else:
-                stretched = np.uint8(255 * (channel - min_val) / (max_val - min_val))
-                stretched_channels.append(stretched)
-        return cv2.merge(stretched_channels)
-    else:
-        min_val = np.min(image)
-        max_val = np.max(image)
-        if max_val == min_val:
-            return image.copy()
-        return np.uint8(255 * (image - min_val) / (max_val - min_val))
 
 def histogram_equalization(image, is_rgb=False):
     """
@@ -127,6 +100,58 @@ def histogram_equalization(image, is_rgb=False):
         return cv2.cvtColor(cv2.merge([h, s, v_eq]), cv2.COLOR_HSV2BGR)
     else:
         return cv2.equalizeHist(image)
+
+def bit_plane_slicing(image, bit, is_rgb=False):
+    """
+    Extract a specific bit-plane from an image.
+    
+    Args:
+        image (np.ndarray): Grayscale or RGB image array.
+        bit (int): Bit-plane to extract (0-7).
+        is_rgb (bool): If True, process each RGB channel separately.
+    
+    Returns:
+        np.ndarray: Binary image of the selected bit-plane.
+    """
+    if is_rgb:
+        channels = cv2.split(image)
+        sliced_channels = []
+        for channel in channels:
+            sliced = np.uint8((channel & (1 << bit)) > 0) * 255
+            sliced_channels.append(sliced)
+        return cv2.merge(sliced_channels)
+    else:
+        return np.uint8((image & (1 << bit)) > 0) * 255
+
+def piecewise_linear_transform(image, r1, s1, r2, s2, is_rgb=False):
+    """
+    Apply Piecewise Linear Transformation using control points.
+    
+    Args:
+        image (np.ndarray): Grayscale or RGB image array.
+        r1, s1 (int): First control point (input, output intensity).
+        r2, s2 (int): Second control point (input, output intensity).
+        is_rgb (bool): If True, process each RGB channel separately.
+    
+    Returns:
+        np.ndarray: Transformed image.
+    """
+    def transform_channel(channel):
+        output = np.zeros_like(channel, dtype=np.float32)
+        mask1 = channel <= r1
+        output[mask1] = (s1 / r1) * channel[mask1] if r1 > 0 else 0
+        mask2 = (channel > r1) & (channel <= r2)
+        output[mask2] = s1 + ((s2 - s1) / (r2 - r1)) * (channel[mask2] - r1) if r2 > r1 else s1
+        mask3 = channel > r2
+        output[mask3] = s2 + ((255 - s2) / (255 - r2)) * (channel[mask3] - r2) if r2 < 255 else s2
+        return np.uint8(np.clip(output, 0, 255))
+
+    if is_rgb:
+        channels = cv2.split(image)
+        transformed_channels = [transform_channel(channel) for channel in channels]
+        return cv2.merge(transformed_channels)
+    else:
+        return transform_channel(image)
 
 def get_histogram(image, is_rgb=False):
     """
@@ -238,8 +263,21 @@ def index():
                 output_image = gray_level_slicing(image, min_gray, max_gray, is_rgb=is_rgb)
             elif enhancement == 'histogram':
                 output_image = histogram_equalization(image, is_rgb=is_rgb)
-            elif enhancement == 'contrast_stretching':
-                output_image = contrast_stretching(image, is_rgb=is_rgb)
+            elif enhancement == 'bit_slicing':
+                bit = int(request.form.get('bit_plane', DEFAULTS['bit_plane']))
+                if bit < 0 or bit > 7:
+                    error = 'Bit plane must be between 0 and 7'
+                    return render_template('index.html', error=error, defaults=DEFAULTS)
+                output_image = bit_plane_slicing(image, bit, is_rgb=is_rgb)
+            elif enhancement == 'piecewise_linear':
+                r1 = int(request.form.get('r1', DEFAULTS['r1']))
+                s1 = int(request.form.get('s1', DEFAULTS['s1']))
+                r2 = int(request.form.get('r2', DEFAULTS['r2']))
+                s2 = int(request.form.get('s2', DEFAULTS['s2']))
+                if r1 < 0 or r1 > 255 or s1 < 0 or s1 > 255 or r2 < 0 or r2 > 255 or s2 < 0 or s2 > 255 or r1 > r2:
+                    error = 'Invalid control points (0 ≤ r1 ≤ r2 ≤ 255, 0 ≤ s1, s2 ≤ 255)'
+                    return render_template('index.html', error=error, defaults=DEFAULTS)
+                output_image = piecewise_linear_transform(image, r1, s1, r2, s2, is_rgb=is_rgb)
             else:
                 error = 'Invalid enhancement selected'
                 return render_template('index.html', error=error, defaults=DEFAULTS)
